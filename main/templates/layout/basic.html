@@ -1,0 +1,88 @@
+{% load bootstrap4 %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>{% block title %}Главная{% endblock %} - Доска объявлений</title>
+    {% bootstrap_css %}
+    <link rel="stylesheet" href="{% static 'main/style.css' %}">
+    {% bootstrap_javascript jquery='slim' %}
+</head>
+<body>
+  <header class="mb-4">
+      <h1 class="display-1 text-center">Объявления</h1>
+  </header>
+  <div class="main">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="#">Navbar scroll</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarScroll" aria-controls="navbarScroll" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse justify-content-end" id="navbarScroll">
+          <ul class="nav navbar-nav me-auto my-2 my-lg-0 navbar-nav-scroll" style="--bs-scroll-height: 100px;">
+            <!-- <li class="nav-item">
+              <a class="nav-link active" aria-current="page" href="#">Home</a>
+            </li> -->
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'main:register' %}">Регистрация</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link active" aria-current="page" href="{% url 'main:other' page='about' %}">О сайте</a>
+            </li>
+
+            {% if user.is_authenticated %}
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" id="navbarScrollingDropdown" role="button" data-toggle="dropdown" aria-expanded="false">
+                Профиль
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="navbarScrollingDropdown">
+                <li><a class="dropdown-item" href="{% url 'main:profile' %}">Мои объявления</a></li>
+                <li><a class="dropdown-item" href="{% url 'main:profile_change' %}">Изменить личные данные</a></li>
+                <li><a class="dropdown-item" href="{% url 'main:password_change' %}">Изменить пароль</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="{% url 'main:logout' %}">Выйти</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="{% url 'main:profile_delete' %}">Удалить</a></li>
+              </ul>
+            </li>
+            {% else %}
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'main:login' %}">Вход</a>
+            </li>
+            {% endif %}
+          </ul>
+          <!-- <form class="d-flex">
+            <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+            <button class="btn btn-outline-success" type="submit">Search</button>
+          </form> -->
+        </div>
+      </div>
+    </nav>
+      
+    <div class="row">
+      <nav class="col-md-auto nav flex-column border">
+        <li class="nav-item"><a class="nav-link root" href="{% url 'main:index' %}">Главная</а></li>
+        <span class="nav-link root font-weight-bold">Heдвижимость</span>
+        <a class="nav-link" href="#">Жилье</a>
+        <a class="nav-link" Ьге1="#">Склады</а>
+        <a class="nav-link" Нге1="#">Гаражи</а>
+        <span class="nav-link root font-weight-bold" href="#">Транспорт</span>
+        <a class="nav-link" href="#">Легковой</a>
+        <a class="nav-link" href="#">Грузовой</a>
+      </nav>
+      <section class="col border py-2">
+      {% bootstrap_messages %}
+      {% block content %}
+      {% endblock %}
+      </section>
+    </div>
+  </div>    
+    <footer class="mt-3 d-flex justify-content-center">
+        <p class="text-right font-italic">&copy; читатели.</p>
+    </footer>
+</body>
+</html>
