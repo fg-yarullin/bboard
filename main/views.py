@@ -1,7 +1,7 @@
 # from django import template
 import django
-from django.shortcuts import render, get_object_or_404
-from django.http import HttpResponse, Http404, request
+from django.shortcuts import render, redirect, get_object_or_404
+from django.http import HttpResponse, Http404
 from django.template import TemplateDoesNotExist
 from django.template.loader import get_template
 from django.contrib.auth.views import LoginView, LogoutView, PasswordChangeView
@@ -14,6 +14,15 @@ from django.views.generic.base import TemplateView
 from django.core.signing import BadSignature
 from django.contrib.auth import logout
 from django.contrib import messages
+
+from django.core.mail import send_mail, BadHeaderError
+from django.contrib.auth.forms import PasswordResetForm
+# from django.contrib.auth.models import User
+from django.template.loader import render_to_string
+from django.db.models.query_utils import Q
+from django.utils.http import urlsafe_base64_encode
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.encoding import force_bytes
 
 from .models import AdvUser
 from .forms import ChangeUserInfoForm, RegisterUserForm
@@ -61,7 +70,7 @@ class BBPasswordChangeView(SuccessMessageMixin, LoginRequiredMixin, PasswordChan
     template_name = 'main/password_change.html'
     success_url = reverse_lazy('main:profile')
     success_message = 'Пароль пользователя изменен'
-    
+
 class RegisterUserView(CreateView):
     model = AdvUser
     template_name = 'main/register_user.html'
@@ -97,10 +106,40 @@ class DeleteUserView(LoginRequiredMixin, DeleteView):
     
     def post(self, request, *args, **kwargs):
         logout(request)
-        messages.add_message(request, messages.SUCCESS, 'Пользователь удаден')
+        messages.add_message(request, messages.SUCCESS, 'Пользователь удален')
         return super().post(request, *args, **kwargs)
     
     def get_object(self, queryset=None):
         if not queryset:
             queryset = self.get_queryset()
         return get_object_or_404(queryset, pk=self.user_id)
+
+
+
+def password_reset_request(request):
+    if request.method == "POST":
+        password_reset_form = PasswordResetForm(request.POST)
+        if password_reset_form.is_valid():
+            data = password_reset_form.cleaned_data['email']
+            associated_users = AdvUser.objects.filter(Q(email=data))
+            if associated_users.exists():
+                for user in associated_users:
+                    subject = "Password Reset Requested"
+                    email_template_name = "email/password_reset_email.txt"
+                    c = {
+                        "email": user.email,
+                        'domain': '127.0.0.1:8000',
+                        'site_name': 'Website',
+                        "uid": urlsafe_base64_encode(force_bytes(user.pk)),
+                        "user": user,
+                        'token': default_token_generator.make_token(user),
+                        'protocol': 'http',
+                    }
+                    email = render_to_string(email_template_name, c)
+                    try:
+                        send_mail(subject, email, 'admin@example.com', [user.email], fail_silently=False)
+                    except BadHeaderError:
+                        return HttpResponse('Invalid header found.')
+                    return redirect("main/password_reset_done/")
+    password_reset_form = PasswordResetForm()
+    return render(request=request, template_name='main/password_reset.html', context={"password_reset_form": password_reset_form})

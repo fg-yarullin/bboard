@@ -12,3 +12,4 @@ dbdata/
 *.log
 
 __pycache__/
+venv/
