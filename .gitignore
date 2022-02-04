@@ -1,4 +1,5 @@
 # Global
+.idea/
 .*.swp
 .DS_Store
 

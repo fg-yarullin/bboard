@@ -1,7 +1,7 @@
-{% load bootstrap4 %}
-{% load static %}
 <!DOCTYPE html>
 <html lang="ru">
+{% load bootstrap4 %}
+{% load static %}
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -65,14 +65,17 @@
       
     <div class="row">
       <nav class="col-md-auto nav flex-column border">
-        <li class="nav-item"><a class="nav-link root" href="{% url 'main:index' %}">Главная</а></li>
-        <span class="nav-link root font-weight-bold">Heдвижимость</span>
-        <a class="nav-link" href="#">Жилье</a>
-        <a class="nav-link" Ьге1="#">Склады</а>
-        <a class="nav-link" Нге1="#">Гаражи</а>
-        <span class="nav-link root font-weight-bold" href="#">Транспорт</span>
-        <a class="nav-link" href="#">Легковой</a>
-        <a class="nav-link" href="#">Грузовой</a>
+        <li class="nav-item">
+          <a href="{% url 'main:index' %}" class="nav-link root">Главная</a>
+        </li>
+        {% for rubric in rubrics %}
+        {% ifchanged rubric.super_rubric.pk %}
+        <span class="nav-link root font-weight-bold">{{ rubric.super_rubric.name }}</span>
+        {% endifchanged %}
+        <li class="nav-item ml-2">
+          <a class="nav-link" href="{% url 'main:by_rubric' pk=rubric.pk %}">{{ rubric.name }}</a>
+        </li>
+        {% endfor %}
       </nav>
       <section class="col border py-2">
       {% bootstrap_messages %}

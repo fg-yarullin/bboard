@@ -1,15 +1,20 @@
 from django.contrib import admin
 import datetime
 
-from .models import AdvUser
+from .models import AdvUser, SuperRubric, SubRubric, Bb, AdditionalImage
 from .utilities import send_activation_notification
+from .forms import SubRubricForm
+
 
 def send_activation_notifications(modeladmin, request, queryset):
     for rec in queryset:
         if not rec.is_activated:
             send_activation_notification(rec)
-    modeladmin.message_user(request, 'Письма с требовниями отправлены')
-send_activation_notifications.short_description = 'Отправка писем с ребованиями активации'
+    modeladmin.message_user(request, 'Письма с требованиями отправлены')
+
+
+send_activation_notifications.short_description = 'Отправка писем с требованиями активации'
+
 
 class NonactivatedFilter(admin.SimpleListFilter):
     title = 'Прошли активацию?'
@@ -32,7 +37,8 @@ class NonactivatedFilter(admin.SimpleListFilter):
         elif val == 'week':
             d = datetime.date.today() - datetime.timedelta(weeks=3)
             return queryset.filter(is_active=False, is_activated=False, date_joined__date__lt=d)
-        
+
+
 class AdvUserAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'is_activated', 'date_joined')
     search_fields = ('username', 'email', 'first_name', 'last_name')
@@ -48,5 +54,32 @@ class AdvUserAdmin(admin.ModelAdmin):
     readonly_fields = ('last_login', 'date_joined')
     actions = (send_activation_notifications,)
 
+
+class SubRubricInline(admin.TabularInline):
+    model = SubRubric
+
+
+class SuperRubricAdmin(admin.ModelAdmin):
+    exclude = ('super_rubric',)
+    inlines = (SubRubricInline,)
+
+
+class SubRubricAdmin(admin.ModelAdmin):
+    form = SubRubricForm
+
+
+class AdditionalImageInline(admin.TabularInline):
+    model = AdditionalImage
+
+
+class BbAdmin(admin.ModelAdmin):
+    list_display = ('rubric', 'title', 'content', 'author', 'created_at')
+    fields = (('rubric', 'author'), 'title', 'content', 'price', 'contacts', 'image', 'is_active')
+    inlines = (AdditionalImageInline,)
+
+
 # Register your models here.
 admin.site.register(AdvUser, AdvUserAdmin)
+admin.site.register(SuperRubric, SuperRubricAdmin)
+admin.site.register(SubRubric, SubRubricAdmin)
+admin.site.register(Bb, BbAdmin)

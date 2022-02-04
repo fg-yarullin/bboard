@@ -35,6 +35,7 @@ rmvirtualenv name_of_environment — Удаление конкретной ви�
 # Running the website
 
 	python3 manage.py runserver
+    python3 manage.py runserver --nostatic
 
 # Запуск отладочного SMTP-сервера
     sudo python3 -m smtpd -n -c DebuggingServer localhost:1025

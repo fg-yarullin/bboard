@@ -23,32 +23,39 @@ from django.db.models.query_utils import Q
 from django.utils.http import urlsafe_base64_encode
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.encoding import force_bytes
+from django.core.paginator import Paginator
 
-from .models import AdvUser
-from .forms import ChangeUserInfoForm, RegisterUserForm
+from .models import AdvUser, SubRubric, Bb
+from .forms import ChangeUserInfoForm, RegisterUserForm, SearchForm
 from .utilities import signer
+
 
 # Create your views here.
 
 def index(request):
     return render(request, 'main/index.html')
 
+
 def other_page(request, page):
-    try: 
+    try:
         template = get_template('main/' + page + '.html')
     except TemplateDoesNotExist:
         raise Http404
     return HttpResponse(template.render(request=request))
 
+
 class BBLoginView(LoginView):
     template_name = 'main/login.html'
-    
+
+
 class BBLogoutView(LoginRequiredMixin, LogoutView):
     template_name = 'main/logout.html'
+
 
 @login_required
 def profile(request):
     return render(request, 'main/profile.html')
+
 
 class ChangeUserInfoView(SuccessMessageMixin, LoginRequiredMixin, UpdateView):
     model = AdvUser
@@ -56,30 +63,34 @@ class ChangeUserInfoView(SuccessMessageMixin, LoginRequiredMixin, UpdateView):
     form_class = ChangeUserInfoForm
     success_url = reverse_lazy('main:profile')
     success_message = 'Данне пользователя изменены'
-    
+
     def setup(self, request, *args, **kwargs):
         self.user_id = request.user.pk
         return super().setup(request, *args, **kwargs)
-    
+
     def get_object(self, queryset=None):
         if not queryset:
             queryset = self.get_queryset()
         return get_object_or_404(queryset, pk=self.user_id)
+
 
 class BBPasswordChangeView(SuccessMessageMixin, LoginRequiredMixin, PasswordChangeView):
     template_name = 'main/password_change.html'
     success_url = reverse_lazy('main:profile')
     success_message = 'Пароль пользователя изменен'
 
+
 class RegisterUserView(CreateView):
     model = AdvUser
     template_name = 'main/register_user.html'
     form_class = RegisterUserForm
     success_url = reverse_lazy('main:register_done')
-    
+
+
 class RegisterDoneView(TemplateView):
     template_name = 'main/register_done.html'
-    
+
+
 def user_activate(request, sign):
     try:
         username = signer.unsign(sign)
@@ -95,25 +106,25 @@ def user_activate(request, sign):
         user.save()
     return render(request, template)
 
+
 class DeleteUserView(LoginRequiredMixin, DeleteView):
     model = AdvUser
     template_name = 'main/delete_user.html'
     success_url = reverse_lazy('main:index')
-    
+
     def setup(self, request, *args, **kwargs):
         self.user_id = request.user.pk
         return super().setup(request, *args, **kwargs)
-    
+
     def post(self, request, *args, **kwargs):
         logout(request)
         messages.add_message(request, messages.SUCCESS, 'Пользователь удален')
         return super().post(request, *args, **kwargs)
-    
+
     def get_object(self, queryset=None):
         if not queryset:
             queryset = self.get_queryset()
         return get_object_or_404(queryset, pk=self.user_id)
-
 
 
 def password_reset_request(request):
@@ -142,4 +153,25 @@ def password_reset_request(request):
                         return HttpResponse('Invalid header found.')
                     return redirect("main/password_reset_done/")
     password_reset_form = PasswordResetForm()
-    return render(request=request, template_name='main/password_reset.html', context={"password_reset_form": password_reset_form})
+    return render(request=request, template_name='main/password_reset.html',
+                  context={"password_reset_form": password_reset_form})
+
+
+def by_rubric(request, pk):
+    rubric = get_object_or_404(SubRubric, pk=pk)
+    bbs = Bb.objects.filter(is_active=True, rubric=pk)
+    if 'keyword' in request.GET:
+        keyword = request.GET['keyword']
+        q = Q(title__icontains=keyword) | Q(conten__icontains=keyword)
+        bbs = bbs.filter(q)
+    else:
+        keyword = ''
+    form = SearchForm(initial={'keyword': keyword})
+    paginator = Paginator(bbs, 2)
+    if 'page' in request.GET:
+        page_num = request.GET['page']
+    else:
+        page_num = 1
+    page = paginator.get_page(page_num)
+    context = {'rubric': rubric, 'page': page, 'bbs': page.object_list, 'form': form}
+    return render(request, 'main/by_rubric.html', context)
