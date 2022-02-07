@@ -33,7 +33,9 @@ from .utilities import signer
 # Create your views here.
 
 def index(request):
-    return render(request, 'main/index.html')
+    bbs = Bb.objects.filter(is_active=True).order_by('-id')[:10]
+    context = {'bbs': bbs}
+    return render(request, 'main/index.html', context)
 
 
 def other_page(request, page):
@@ -54,7 +56,9 @@ class BBLogoutView(LoginRequiredMixin, LogoutView):
 
 @login_required
 def profile(request):
-    return render(request, 'main/profile.html')
+    bbs = Bb.objects.filter(author=request.user.pk)
+    context = {'bbs': bbs}
+    return render(request, 'main/profile.html', context)
 
 
 class ChangeUserInfoView(SuccessMessageMixin, LoginRequiredMixin, UpdateView):
@@ -144,7 +148,8 @@ def password_reset_request(request):
                         "uid": urlsafe_base64_encode(force_bytes(user.pk)),
                         "user": user,
                         'token': default_token_generator.make_token(user),
-                        'protocol': 'http',
+                        'protocol': 'http',# user = get_object_or_404(AdvUser, id=pk)
+    # p
                     }
                     email = render_to_string(email_template_name, c)
                     try:
@@ -161,8 +166,9 @@ def by_rubric(request, pk):
     rubric = get_object_or_404(SubRubric, pk=pk)
     bbs = Bb.objects.filter(is_active=True, rubric=pk)
     if 'keyword' in request.GET:
-        keyword = request.GET['keyword']
-        q = Q(title__icontains=keyword) | Q(conten__icontains=keyword)
+        keyword = request.GET['keyword']# user = get_object_or_404(AdvUser, id=pk)
+    # p
+        q = Q(title__icontains=keyword) | Q(content__icontains=keyword)
         bbs = bbs.filter(q)
     else:
         keyword = ''
@@ -175,3 +181,19 @@ def by_rubric(request, pk):
     page = paginator.get_page(page_num)
     context = {'rubric': rubric, 'page': page, 'bbs': page.object_list, 'form': form}
     return render(request, 'main/by_rubric.html', context)
+
+
+def detail(request, rubric_pk, pk):
+    bb = get_object_or_404(Bb, pk=pk)
+    ais = bb.additionalimage_set.all()
+    context = {'bb': bb, 'ais': ais}
+    return render(request, 'main/detail.html', context)
+
+
+@login_required
+def profile_bb_detail(request, pk):
+    bbs = ''
+    if request.user.pk == pk:
+        bbs = Bb.objects.filter(author_id=pk)
+    context = {'bbs': bbs}
+    return render(request, 'main/profile_bb_detail.html', context)

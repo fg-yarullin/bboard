@@ -40,7 +40,7 @@
                 Профиль
               </a>
               <ul class="dropdown-menu" aria-labelledby="navbarScrollingDropdown">
-                <li><a class="dropdown-item" href="{% url 'main:profile' %}">Мои объявления</a></li>
+                <li><a class="dropdown-item" href="{% url 'main:profile_bb_detail' pk=user.pk %}">Мои объявления</a></li>
                 <li><a class="dropdown-item" href="{% url 'main:profile_change' %}">Изменить личные данные</a></li>
                 <li><a class="dropdown-item" href="{% url 'main:password_change' %}">Изменить пароль</a></li>
                 <li><hr class="dropdown-divider"></li>

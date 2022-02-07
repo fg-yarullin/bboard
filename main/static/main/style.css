@@ -7,5 +7,17 @@ header {
 }
 
 .root {
-    font-size: larger;
+  font-size: larger;
+}
+
+.main-image {
+  width: 300px;
+}
+
+.additional-image {
+  width: 180px;
+}
+
+.no-image{
+  width: 100px;
 }
